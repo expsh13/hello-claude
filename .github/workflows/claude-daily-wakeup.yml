@@ -37,7 +37,7 @@ jobs:
         env:
           CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
         run: |
-          echo "hi" | claude --print --output-format json --model haiku --tools "" > response.json
+          echo "hi" | claude --print --output-format json --model haiku --tools "" --verbose 2>&1 | tee response.json || true
           cat response.json
 
       - name: Parse response and create summary
