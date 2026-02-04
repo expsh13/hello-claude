@@ -2,8 +2,12 @@ name: Daily Hi to Claude
 
 on:
   schedule:
-    # 日本時間 17:00 = UTC 08:00
-    - cron: "0 8 * * *"
+    # 平日 JST 17:00 = UTC 08:00 (月〜金: 1-5)
+    - cron: "0 8 * * 1-5"
+    # 休日 JST 10:00 = UTC 01:00 (土日: 0,6)
+    - cron: "0 1 * * 0,6"
+    # 休日 JST 15:00 = UTC 06:00 (土日: 0,6)
+    - cron: "0 6 * * 0,6"
   workflow_dispatch: # 手動実行も可能
 
 permissions:
