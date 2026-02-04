@@ -24,20 +24,31 @@ jobs:
       - name: Install Claude Code
         run: npm install -g @anthropic-ai/claude-code
 
+      - name: Check Claude Code version
+        run: claude --version
+
+      - name: Check authentication
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+        run: |
+          echo "Token is set: $([ -n "$CLAUDE_CODE_OAUTH_TOKEN" ] && echo 'Yes' || echo 'No')"
+
       - name: Say hi to Claude
         env:
           CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
         run: |
-          RESPONSE=$(echo "hi" | claude --print --output-format json --model haiku --allowedTools "")
-          echo "$RESPONSE"
+          echo "hi" | claude --print --output-format json --model haiku --allowedTools "" > response.json
+          cat response.json
 
+      - name: Parse response and create summary
+        run: |
           # JSONからデータ抽出
-          RESULT=$(echo "$RESPONSE" | jq -r '.result')
-          COST=$(echo "$RESPONSE" | jq -r '.total_cost_usd')
-          INPUT_TOKENS=$(echo "$RESPONSE" | jq -r '.usage.input_tokens')
-          OUTPUT_TOKENS=$(echo "$RESPONSE" | jq -r '.usage.output_tokens')
-          CACHE_CREATION=$(echo "$RESPONSE" | jq -r '.usage.cache_creation_input_tokens')
-          CACHE_READ=$(echo "$RESPONSE" | jq -r '.usage.cache_read_input_tokens')
+          RESULT=$(jq -r '.result' response.json)
+          COST=$(jq -r '.total_cost_usd' response.json)
+          INPUT_TOKENS=$(jq -r '.usage.input_tokens' response.json)
+          OUTPUT_TOKENS=$(jq -r '.usage.output_tokens' response.json)
+          CACHE_CREATION=$(jq -r '.usage.cache_creation_input_tokens' response.json)
+          CACHE_READ=$(jq -r '.usage.cache_read_input_tokens' response.json)
 
           # Summaryに表示
           echo "## 🤖 Claude の応答" >> $GITHUB_STEP_SUMMARY
