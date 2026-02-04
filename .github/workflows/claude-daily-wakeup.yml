@@ -28,7 +28,7 @@ jobs:
         env:
           CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
         run: |
-          RESPONSE=$(echo "hi" | claude --print --output-format json --model haiku --tools "")
+          RESPONSE=$(echo "hi" | claude --print --output-format json --model haiku --allowedTools "")
           echo "$RESPONSE"
 
           # JSONからデータ抽出
