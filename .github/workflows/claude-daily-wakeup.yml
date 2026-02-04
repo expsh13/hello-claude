@@ -3,7 +3,7 @@ name: Daily Hi to Claude
 on:
   schedule:
     # 日本時間 17:00 = UTC 08:00
-    - cron: '0 8 * * *'
+    - cron: "0 8 * * *"
   workflow_dispatch: # 手動実行も可能
 
 permissions:
@@ -19,7 +19,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: "20"
 
       - name: Install Claude Code
         run: npm install -g @anthropic-ai/claude-code
@@ -37,7 +37,7 @@ jobs:
         env:
           CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
         run: |
-          echo "hi" | claude --print --output-format json --model haiku --allowedTools "" > response.json
+          echo "hi" | claude --print --output-format json --model haiku --tools "" > response.json
           cat response.json
 
       - name: Parse response and create summary
