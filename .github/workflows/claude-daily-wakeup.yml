@@ -1,0 +1,63 @@
+name: Daily Hi to Claude
+
+on:
+  schedule:
+    # 日本時間 17:00 = UTC 08:00
+    - cron: '0 8 * * *'
+  workflow_dispatch: # 手動実行も可能
+
+permissions:
+  contents: write
+
+jobs:
+  say-hi:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Claude Code
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: Say hi to Claude
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+        run: |
+          RESPONSE=$(echo "hi" | claude --print --output-format json --model haiku --tools "")
+          echo "$RESPONSE"
+
+          # JSONからデータ抽出
+          RESULT=$(echo "$RESPONSE" | jq -r '.result')
+          COST=$(echo "$RESPONSE" | jq -r '.total_cost_usd')
+          INPUT_TOKENS=$(echo "$RESPONSE" | jq -r '.usage.input_tokens')
+          OUTPUT_TOKENS=$(echo "$RESPONSE" | jq -r '.usage.output_tokens')
+          CACHE_CREATION=$(echo "$RESPONSE" | jq -r '.usage.cache_creation_input_tokens')
+          CACHE_READ=$(echo "$RESPONSE" | jq -r '.usage.cache_read_input_tokens')
+
+          # Summaryに表示
+          echo "## 🤖 Claude の応答" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "$RESULT" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## 📊 トークン使用量" >> $GITHUB_STEP_SUMMARY
+          echo "| 項目 | 値 |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|-----|" >> $GITHUB_STEP_SUMMARY
+          echo "| Input Tokens | $INPUT_TOKENS |" >> $GITHUB_STEP_SUMMARY
+          echo "| Output Tokens | $OUTPUT_TOKENS |" >> $GITHUB_STEP_SUMMARY
+          echo "| Cache Creation | $CACHE_CREATION |" >> $GITHUB_STEP_SUMMARY
+          echo "| Cache Read | $CACHE_READ |" >> $GITHUB_STEP_SUMMARY
+          echo "| **コスト (USD)** | **\$$COST** |" >> $GITHUB_STEP_SUMMARY
+
+      - name: Update last run and commit
+        run: |
+          echo "$(date -u '+%Y-%m-%dT%H:%M:%SZ')" > .github/.last-run
+          git config user.name github-actions
+          git config user.email action@github.com
+          git add .github/.last-run
+          git commit -m "Update last run"
+          git push
